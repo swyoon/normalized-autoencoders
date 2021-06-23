@@ -1,0 +1,88 @@
+data:
+  indist_train:
+    augmentations:
+      hflip:
+        p: 0.5
+    batch_size: 128
+    dataset: CIFAR10_OOD
+    dequant:
+      UniformDequantize: {}
+    n_workers: 8
+    path: datasets
+    shuffle: true
+    split: training
+  indist_val:
+    batch_size: 128
+    dataset: CIFAR10_OOD
+    n_workers: 8
+    path: datasets
+    split: validation
+  ood_target:
+    batch_size: 128
+    dataset: Constant_OOD
+    n_workers: 8
+    path: datasets
+    size: 32
+    split: validation
+  ood_val:
+    batch_size: 128
+    channel: 3
+    dataset: SVHN_OOD
+    n_workers: 8
+    path: datasets
+    split: validation
+device: cuda:3
+logger: nae
+model:
+  arch: nae
+  decoder:
+    arch: sngan_generator_gn
+    hidden_dim: 128
+    num_groups: 2
+    out_activation: sigmoid
+  encoder:
+    arch: IGEBMEncoder
+    keepdim: true
+    use_spectral_norm: false 
+  nae:
+    buffer_size: 10000
+    deterministic: true
+    gamma: 1
+    l2_norm_reg: null
+    l2_norm_reg_en: null
+    replay: true
+    replay_ratio: 0.95
+    sampling: on_manifold
+    sigma: 0.001
+    spherical: true
+    temperature: 1.0
+    temperature_trainable: false
+    x_bound:
+    - 0
+    - 1
+    x_clip_langevin_grad: 0.01
+    x_noise_anneal: 1
+    x_noise_std: 0.02
+    x_step: 40
+    x_stepsize: 10
+    z_bound: null
+    z_clip_langevin_grad: null
+    z_noise_anneal: null
+    z_noise_std: 0.02
+    z_step: 20
+    z_stepsize: 1
+  x_dim: 3
+  z_dim: 32
+trainer: nae
+training:
+  ae_epoch: 180
+  ae_lr: 0.0001
+  fix_D: false
+  lr_schedule: null
+  nae_epoch: 40
+  nae_lr: 1.0e-05
+  print_interval: 352
+  resume: null
+  save_interval: 2000
+  temperature_lr: 0.001
+  val_interval: 352
