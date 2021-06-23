@@ -2,7 +2,11 @@
 
 The official repository for &lt;Autoencoding Under Normalization Constraints> (Yoon, Noh and Park, ICML 2021).
 
-Arxiv: https://arxiv.org/abs/2105.05735
+> The paper proposes Normalized Autoencoder (NAE), which is a novel energy-based model where the energy function is the reconstruction error. NAE effectively remedies outlier reconstruction, a pathological phenomenon limiting the performance of an autoencoder as an outlier detector.
+
+Arxiv: https://arxiv.org/abs/2105.05735  
+5-min video: https://www.youtube.com/watch?v=ra6usGKnPGk
+
 
 ![MNIST-figure](fig_mnist_recon_with_box_v2.png)
 
