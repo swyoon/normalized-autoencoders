@@ -3,6 +3,9 @@ import torch
 from torch.optim import Adam
 from models.modules import FCNet
 from models.nae import NAE, FFEBM
+from models import get_model
+from omegaconf import OmegaConf
+
 
 def test_ffebm():
     net = FCNet(2, 1, out_activation='linear')
@@ -40,3 +43,15 @@ def test_nae(sampling):
 
     # training
     nae.train_step(X, opt)
+
+
+def test_cifar():
+    cfg = OmegaConf.load('configs/cifar_ood_nae/z32gn.yml')
+    model = get_model(cfg)
+    xx = torch.rand(2, 3, 32, 32)
+    recon = model.reconstruct(xx)
+    error = model(xx)
+
+    assert recon.shape == (2, 3, 32, 32)
+    assert error.shape == (2,)
+

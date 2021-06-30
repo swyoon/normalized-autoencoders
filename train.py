@@ -54,7 +54,7 @@ def run(cfg, writer):
 
     model, train_result = trainer.train(model, optimizer, d_dataloaders, logger=logger,
                                    logdir=writer.file_writer.get_logdir(), scheduler=sch,
-                                   clip_grad=cfg['training']['clip_grad'])
+                                   clip_grad=cfg['training'].get('clip_grad', None))
 
 
 

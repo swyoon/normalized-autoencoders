@@ -422,10 +422,9 @@ class NAE(FFEBM):
 
     def validation_step(self, x, y=None):
         z = self.encode(x)
-        energy = self.error(x, z)
-        loss = energy.mean().item()
         recon = self.decoder(z)
-        pos_e = self.energy(x)
+        energy = self.error(x, recon)
+        loss = energy.mean().item()
         recon_img = make_grid(recon.detach().cpu(), nrow=10, range=(0, 1))
         input_img = make_grid(x.detach().cpu(), nrow=10, range=(0, 1))
         return {'loss': loss, 'pos_e': loss, 'recon@': recon_img, 'input@': input_img}

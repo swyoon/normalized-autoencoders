@@ -31,19 +31,20 @@ class NAETrainer(BaseTrainer):
         # nae_opt = Adam([{'params': list(model.encoder.parameters()) + list(model.decoder.parameters())},
         #                 {'params': model.temperature_, 'lr': cfg.temperature_lr}], lr=cfg.nae_lr)
 
-        if cfg.fix_D:
+        if cfg.get('fix_D', False):
             if hasattr(model, 'temperature_'):
                 nae_opt = Adam(list(model.encoder.parameters()) + [model.temperature_], lr=cfg.nae_lr)
             else:
                 nae_opt = Adam(model.encoder.parameters(), lr=cfg.nae_lr)
-        elif cfg.small_D_lr:
+        elif cfg.get('small_D_lr', False):
             print('small decoder learning rate')
             nae_opt = Adam([{'params': model.encoder.parameters(), 'lr': cfg.nae_lr},
                              {'params': model.decoder.parameters(), 'lr': cfg.nae_lr / 10}])
         else:
-            nae_opt = Adam([{'params': list(model.encoder.parameters()) + list(model.decoder.parameters())},
-                            {'params': model.temperature_, 'lr': cfg.temperature_lr}], lr=cfg.nae_lr)
-            # nae_opt = Adam(model.parameters(), lr=cfg.nae_lr)
+            l_params = [{'params': list(model.encoder.parameters()) + list(model.decoder.parameters())}]
+            if model.temperature_trainable:
+                l_params.append({'params': model.temperature_, 'lr': cfg.temperature_lr})
+            nae_opt = Adam(l_params, lr=cfg.nae_lr)
 
         '''AE PASS'''
         if 'load_ae' in cfg:
@@ -97,7 +98,7 @@ class NAETrainer(BaseTrainer):
                 print('terminating autoencoder training since validation loss does not decrease anymore')
                 break
 
-        '''EBAE PASS'''
+        '''NAE PASS'''
         # load best autoencoder model
         #  model.load_state_dict(torch.load(os.path.join(logdir, 'model_best.pkl'))['model_state'])
         # print('best model loaded')
