@@ -18,8 +18,6 @@ model:
     nae:
         spherical: True
         gamma: 1
-        delta: Null
-        deterministic: True
         sampling: on_manifold
 
         z_step: 20
@@ -43,7 +41,6 @@ model:
         z_bound: Null
         l2_norm_reg: Null
         l2_norm_reg_en: Null
-        sigma: 0.001
         temperature: 1.
         temperature_trainable: False
 

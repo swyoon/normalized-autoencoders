@@ -124,23 +124,44 @@ python evaluate_ood.py --ood ConstantGray_OOD,FashionMNIST_OOD,SVHN_OOD,CelebA_O
 
 **Training**
 
+Use `train.py` to train NAE. 
+* `--config` option specifies a path to a configuration yaml file.
+* `--logdir` specifies a directory where results files will be written.
+* `--run` specifies an id for each run, i.e., an experiment.
+
+Training on MNIST
 ```
 python train.py --config configs/mnist_ood_nae/z32.yml --logdir results/mnist_ood_nae/ --run run --device 0
 ```
 
+Training on CIFAR-10
 ```
 python train.py --config configs/cifar_ood_nae/z32gn.yml --logdir results/cifar_ood_nae/ --run run --device 0
 ```
 
+Training on CelebA 64x64
+```
+python train.py --config configs/celeba64_ood_nae/z64gr_h32g8.yml --logdir results/celeba64_ood_nae/z64gr_h32g8.yml --run run --device 0
+```
+
 ## Citation
 
-The bibtex will be updated to the official ICML version once the proceedings are out.
 
 ```
-@article{yoon2021autoencoding,
-  title={Autoencoding Under Normalization Constraints},
-  author={Yoon, Sangwoong and Noh, Yung-Kyun and Park, Frank Chongwoo},
-  journal={arXiv preprint arXiv:2105.05735},
-  year={2021}
+@InProceedings{pmlr-v139-yoon21c,
+  title = 	 {Autoencoding Under Normalization Constraints},
+  author =       {Yoon, Sangwoong and Noh, Yung-Kyun and Park, Frank},
+  booktitle = 	 {Proceedings of the 38th International Conference on Machine Learning},
+  pages = 	 {12087--12097},
+  year = 	 {2021},
+  editor = 	 {Meila, Marina and Zhang, Tong},
+  volume = 	 {139},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {18--24 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {http://proceedings.mlr.press/v139/yoon21c/yoon21c.pdf},
+  url = 	 {https://proceedings.mlr.press/v139/yoon21c.html}
 }
+ 
 ```
+
