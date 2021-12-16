@@ -11,17 +11,17 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('result_dir', type=str)
-parser.add_argument('config', type=str)
-parser.add_argument('ckpt', type=str)
-parser.add_argument('--device', default=0, type=int)
-parser.add_argument('--n_sample', default=1000, type=int)
-parser.add_argument('--zstep', default=None, type=int)
-parser.add_argument('--xstep', default=None, type=int)
-parser.add_argument('--x_shape', default=32, type=int)
+parser.add_argument('result_dir', type=str, help='path to the directory where yaml file and checkpoint is stored.')
+parser.add_argument('config', type=str, help='the name of configs file.')
+parser.add_argument('ckpt', type=str, help='the name of the checkpoint file.')
+parser.add_argument('--device', default=0, type=int, help='the id of cuda device to use')
+parser.add_argument('--n_sample', default=1000, type=int, help='the number of samples to be generated')
+parser.add_argument('--zstep', default=None, type=int, help='the number of the latent Langevin MC steps')
+parser.add_argument('--xstep', default=None, type=int, help='the number of the visible Langevin MC steps')
+parser.add_argument('--x_shape', default=32, type=int, help='the size of a side of an image.')
 parser.add_argument('--batch_size', default=128, type=int)
-parser.add_argument('--name', default=None, type=str)
-parser.add_argument('--replay', default=False, action='store_true')
+parser.add_argument('--name', default=None, type=str, help='additional identifier for the result file.')
+parser.add_argument('--replay', default=False, action='store_true', help='to use the sample replay buffer')
 args = parser.parse_args()
 
 
@@ -68,7 +68,7 @@ n_batch = int(np.ceil(args.n_sample / batch_size))
 l_sample = []
 for i_batch in tqdm(range(n_batch)):
     if i_batch == n_batch - 1:
-        n_sample = args.n_sample % batch_size 
+        n_sample = args.n_sample % batch_size if args.n_sample % batch_size else batch_size 
     else:
         n_sample = batch_size
     d_sample = model.sample(n_sample=n_sample, device=device)

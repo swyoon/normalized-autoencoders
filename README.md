@@ -90,7 +90,7 @@ pretrained
     └── z32
 ```
 
-## Testing
+## Unittesting
 
 PyTest is used for unittesting.
 
@@ -100,9 +100,9 @@ pytest tests
 
 The code should pass all tests after the preparation of pre-trained models and datasets.
 
-## Running
+## Execution 
 
-**OOD Detection Evaluation**
+### OOD Detection Evaluation
 
 ```
 python evaluate_ood.py --ood ConstantGray_OOD,FashionMNIST_OOD,SVHN_OOD,CelebA_OOD,Noise_OOD --resultdir pretrained/cifar_ood_nae/z32gn/ --ckpt nae_9.pkl --config z32gn.yml --device 0 --dataset CIFAR10_OOD
@@ -122,7 +122,7 @@ python evaluate_ood.py --ood ConstantGray_OOD,FashionMNIST_OOD,SVHN_OOD,CelebA_O
 </details>
 
 
-**Training**
+### Training
 
 Use `train.py` to train NAE. 
 * `--config` option specifies a path to a configuration yaml file.
@@ -143,6 +143,32 @@ Training on CelebA 64x64
 ```
 python train.py --config configs/celeba64_ood_nae/z64gr_h32g8.yml --logdir results/celeba64_ood_nae/z64gr_h32g8.yml --run run --device 0
 ```
+
+
+### Sampling
+
+Use `sample.py` to generate sample images form NAE. Samples are saved as `.npy` file containing an `(n_sample, img_h, img_w, channels)` array.
+Note that the quality of generated images is not supposed to match that of state-of-the-art generative models. Improving the sample quality is one of the important future research direction.
+
+Sampling for CIFAR-10
+```
+python sample.py pretrained/cifar_ood_nae/z32gn/ z32gn.yml nae_8.pkl --zstep 180 --xstep 40 --batch_size 64 --n_sample 64 --name run --device 0
+```
+
+
+Sampling for CelebA 64x64
+```
+python sample.py pretrained/celeba64_ood_nae/z64gr_h32g8/ z64gr_h32g8.yml nae_3.pkl --zstep 180 --xstep 40 --batch_size 64 --n_sample 64 --name run --device 0 --x_shape 64
+```
+
+
+Sample images for CIFAR-10 and CelebA 64x64
+
+![cifar10samples](cifar10samples.png)
+
+![celeba64samples](celeba64samples.png)
+
+
 
 ## Citation
 
