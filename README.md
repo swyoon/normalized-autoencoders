@@ -17,11 +17,7 @@ Arxiv: https://arxiv.org/abs/2105.05735
 - [x] OOD detection performance script  (`evaluate_ood.py`)
 - [x] Sampling script (`sample.py`)
 - [x] Pretrained models for MNIST, CIFAR-10, CelebA64
-- [ ] 2D Experiments
-- [ ] MNIST hold-out experiments
-- [ ] Pretrained models for MNIST hold-out and ImageNet32
-- [ ] Generating Noise dataset on-the-fly
-- [ ] Reproducible environment (conda environment or docker)
+- [x] 2D Experiments
 
 Updates on the repository and the releases of other materials will be broadcasted through the mailing list. If you want to be kept in touch, please sign up for [the mailing list](https://mailchi.mp/32e7ca8a0a85/autoencoding-under-normalization-constraints).
 
