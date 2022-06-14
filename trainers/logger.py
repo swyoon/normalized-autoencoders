@@ -17,6 +17,7 @@ class BaseLogger:
         self.val_loss_meter = averageMeter()
         self.d_train = {}
         self.d_val = {}
+        self.has_val_loss = True  # If True, we assume that validation loss is available
 
     def process_iter_train(self, d_result):
         self.train_loss_meter.update(d_result['loss'])
@@ -36,11 +37,13 @@ class BaseLogger:
         return result
 
     def process_iter_val(self, d_result):
-        self.val_loss_meter.update(d_result['loss'])
+        if self.has_val_loss:
+            self.val_loss_meter.update(d_result['loss'])
         self.d_val = d_result
 
     def summary_val(self, i):
-        self.d_val['loss/val_loss_'] = self.val_loss_meter.avg 
+        if self.has_val_loss:
+            self.d_val['loss/val_loss_'] = self.val_loss_meter.avg
         l_print_str = [f'Iter [{i:d}]']
         for key, val in self.d_val.items():
             if key.endswith('_'):

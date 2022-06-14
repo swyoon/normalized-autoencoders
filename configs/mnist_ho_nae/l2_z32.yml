@@ -1,0 +1,96 @@
+trainer: nae_v2
+logger: base 
+model:
+    arch: nae_l2
+    sampling: omi
+    encoder: 
+        arch: conv2fc 
+        nh: 8
+        nh_mlp: 1024 
+        out_activation: spherical 
+    decoder:
+        arch: deconv2
+        nh: 8
+        out_activation: sigmoid
+    nae:
+        gamma: 1 
+        l2_norm_reg_de: Null
+        l2_norm_reg_en: 0.0001
+        T: 1.
+    sampler_z:
+      sampler: langevin
+      n_step: 10
+      stepsize: 0.2
+      noise_std: 0.05
+      noise_anneal: Null
+      clip_langevin_grad: Null
+      buffer_size: 10000
+      replay_ratio: 0.95
+      mh: False
+      bound: spherical 
+      initial_dist: uniform_sphere
+    sampler_x:
+      sampler: langevin
+      n_step: 50
+      stepsize: 10
+      noise_std: 0.05
+      noise_anneal: 1
+      clip_langevin_grad: 0.01
+      mh: False
+      buffer_size: 0
+      bound: [0, 1]
+    x_dim: 1
+    z_dim: 32
+data:
+    indist_train:
+        dataset: MNISTLeaveOut
+        path: datasets
+        batch_size: 128
+        n_workers: 8
+        shuffle: True
+        split: training
+        out_class:
+            - 9
+    indist_val:
+        dataset: MNISTLeaveOut
+        path: datasets
+        batch_size: 128
+        n_workers: 8
+        split: validation 
+        out_class:
+            - 9
+    ood_val:
+        dataset: Constant_OOD 
+        size: 28
+        channel: 1
+        path: datasets
+        batch_size: 128
+        split: validation
+        n_workers: 8
+    ood_target:
+        dataset: MNISTLeaveOut
+        path: datasets
+        batch_size: 128
+        n_workers: 8
+        split: validation
+        out_class:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+training:
+    load_ae: Null 
+    ae_epoch: 100
+    nae_epoch: 50
+    print_interval: 500
+    print_interval_nae: 100
+    val_interval: 352 
+    save_interval: 2000
+    ae_lr: 1.0e-4
+    nae_lr: 1.0e-5
+    nae_opt: all

@@ -12,7 +12,8 @@ from models.ae import (
     DAE,
     WAE,
 )
-from models.nae import NAE
+from models.nae import NAE, NAE_L2_OMI
+from models.mcmc import get_sampler
 from models.modules import (
     DeConvNet2,
     FCNet,
@@ -213,6 +214,23 @@ def get_nae(**model_cfg):
     return ae
 
 
+def get_nae_v2(**model_cfg):
+    arch = model_cfg.pop('arch')
+    sampling = model_cfg.pop('sampling')
+    x_dim = model_cfg['x_dim']
+    z_dim = model_cfg['z_dim']
+
+    encoder = get_net(in_dim=x_dim, out_dim=z_dim, **model_cfg["encoder"])
+    decoder = get_net(in_dim=z_dim, out_dim=x_dim, **model_cfg["decoder"])
+    if arch == 'nae_l2' and sampling == 'omi':
+        sampler_z = get_sampler(**model_cfg['sampler_z'])
+        sampler_x = get_sampler(**model_cfg['sampler_x'])
+        nae = NAE_L2_OMI(encoder, decoder, sampler_z, sampler_x, **model_cfg['nae'])
+    else:
+        raise ValueError(f'Invalid sampling: {sampling}')
+    return nae
+
+
 def get_model(cfg, *args, version=None, **kwargs):
     # cfg can be a whole config dictionary or a value of a key 'model' in the config dictionary (cfg['model']).
     if "model" in cfg:
@@ -232,6 +250,7 @@ def _get_model_instance(name):
         return {
             "ae": get_ae,
             "nae": get_nae,
+            "nae_l2": get_nae_v2,
         }[name]
     except:
         raise ("Model {} not available".format(name))

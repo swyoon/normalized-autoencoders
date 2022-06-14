@@ -1,6 +1,6 @@
-from trainers.logger import BaseLogger 
+from trainers.logger import BaseLogger
 from trainers.base import BaseTrainer
-from trainers.nae import NAETrainer, NAELogger
+from trainers.nae import NAETrainer, NAETrainerV2, NAELogger
 
 
 def get_trainer(cfg):
@@ -11,6 +11,8 @@ def get_trainer(cfg):
     device = cfg['device']
     if trainer_type == 'nae':
         trainer = NAETrainer(cfg['training'], device=device)
+    elif trainer_type == 'nae_v2':
+        trainer = NAETrainerV2(cfg['training'], device=device)
     else:
         trainer = BaseTrainer(cfg['training'], device=device)
     return trainer

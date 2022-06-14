@@ -1,31 +1,30 @@
 # Autoencoding Under Normalization Constraints
 
-The official repository for &lt;Autoencoding Under Normalization Constraints> (Yoon, Noh and Park, ICML 2021).
+The official repository for &lt;Autoencoding Under Normalization Constraints> (Yoon, Noh and Park, ICML 2021) and **normalized autoencoders**.
 
 > The paper proposes Normalized Autoencoder (NAE), which is a novel energy-based model where the energy function is the reconstruction error. NAE effectively remedies outlier reconstruction, a pathological phenomenon limiting the performance of an autoencoder as an outlier detector.
 
-Arxiv: https://arxiv.org/abs/2105.05735  
+Paper: https://arxiv.org/abs/2105.05735  
 5-min video: https://www.youtube.com/watch?v=ra6usGKnPGk
 
 
 ![MNIST-figure](fig_mnist_recon_with_box_v2.png)
 
-## Progress
+## News
 
-- [x] Unit tests (`tests/`)
-- [x] Training script (`train.py`)
-- [x] OOD detection performance script  (`evaluate_ood.py`)
-- [x] Sampling script (`sample.py`)
-- [x] Pretrained models for MNIST, CIFAR-10, CelebA64
-- [x] 2D Experiments
+* 2022-06-13 : Refactoring of NAE class.  
 
-Updates on the repository and the releases of other materials will be broadcasted through the mailing list. If you want to be kept in touch, please sign up for [the mailing list](https://mailchi.mp/32e7ca8a0a85/autoencoding-under-normalization-constraints).
 
-## Requirements
+## Set-up
 
 ### Environment
 
-The project is developed under a standard PyTorch environment.
+I encourage you to use conda to set up a virtual environment. However, other methods should work without problems.
+```
+conda creatne -n nae python=3.7
+```
+
+The main dependencies of the repository is as follows:
 
 - python 3.7.2
 - numpy
@@ -128,6 +127,11 @@ Use `train.py` to train NAE.
 Training on MNIST
 ```
 python train.py --config configs/mnist_ood_nae/z32.yml --logdir results/mnist_ood_nae/ --run run --device 0
+```
+
+Training on MNIST digits 0 to 8 for the hold-out digit detection task
+```
+python train.py --config configs/mnist_ho_nae/l2_z32.yml --logdir results/mnist_ho_nae --run run --device 0
 ```
 
 Training on CIFAR-10

@@ -219,7 +219,165 @@ class NAELogger(BaseLogger):
         return print_str
 
 
+class NAETrainerV2(BaseTrainer):
+    def train(self, model, opt, d_dataloaders, logger=None, logdir='', scheduler=None, clip_grad=None):
+        cfg = self.cfg
+        best_val_loss = np.inf
+        time_meter = averageMeter()
+        i = 0
+        indist_train_loader = d_dataloaders['indist_train']
+        indist_val_loader = d_dataloaders['indist_val']
+        oodval_val_loader = d_dataloaders['ood_val']
+        oodtarget_val_loader = d_dataloaders['ood_target']
+        no_best_model_tolerance = 3
+        no_best_model_count = 0
 
+        n_ae_epoch = cfg.ae_epoch
+        n_nae_epoch = cfg.nae_epoch
+        ae_opt = Adam(list(model.encoder.parameters()) + list(model.decoder.parameters()), lr=cfg.ae_lr)
+        nae_opt_mode = cfg.get('nae_opt', 'fix_ae')
+        if nae_opt_mode == 'fix_ae':
+            if hasattr(model, 'varnetx'):
+                nae_opt = Adam(list(model.varnetx.parameters()) + list(model.varnetz.parameters()), lr=cfg.nae_lr)
+            else:
+                nae_opt = Adam(model.varnet.parameters(), lr=cfg.nae_lr)
+        elif nae_opt_mode == 'all':
+            nae_opt = Adam(model.parameters(), lr=cfg.nae_lr)
+        elif nae_opt_mode == 'fix_D':
+            if hasattr(model, 'varnet'):
+                nae_opt = Adam(list(model.varnet.parameters()) + list(model.encoder.parameters()), lr=cfg.nae_lr)
+            else:
+                nae_opt = Adam(model.encoder.parameters(), lr=cfg.nae_lr)
+        elif nae_opt_mode == 'slow_E':
+            nae_opt = Adam([{'params': model.varnet.parameters(), 'lr': cfg.nae_lr * 10},
+                            {'params': model.encoder.parameters(), 'lr': cfg.nae_lr}])
+        elif nae_opt_mode == 'sgd':
+            nae_opt = SGD(model.parameters(), lr=cfg.nae_lr)
+        else:
+            raise ValueError(f'Invalid nae_opt_mode {nae_opt_mode}')
 
+        '''AE PASS'''
+        if cfg.get('load_ae', None) is not None:
+            n_ae_epoch = 0
+            state_dict = torch.load(cfg['load_ae'])['model_state']
+            encoder_state = {k.replace('encoder.', ''): v for k, v in state_dict.items() if k.startswith('encoder')}
+            decoder_state = {k.replace('decoder.', ''): v for k, v in state_dict.items() if k.startswith('decoder')}
+            model.encoder.load_state_dict(encoder_state)
+            model.decoder.load_state_dict(decoder_state)
+            print(f'model loaded from {cfg["load_ae"]}')
 
+        for i_epoch in range(n_ae_epoch):
+
+            for x, y in indist_train_loader:
+                i += 1
+
+                model.train()
+                x = x.to(self.device)
+                y = y.to(self.device)
+
+                start_ts = time.time()
+                d_train = model.train_step_ae(x, ae_opt, clip_grad=clip_grad)
+                time_meter.update(time.time() - start_ts)
+                logger.process_iter_train(d_train)
+
+                if i % cfg.print_interval == 0:
+                    d_train = logger.summary_train(i)
+                    print(f"Iter [{i:d}] Avg Loss: {d_train['loss/train_loss_']:.4f} Elapsed time: {time_meter.sum:.4f}")
+                    time_meter.reset()
+
+                if i % cfg.val_interval == 0:
+                    model.eval()
+                    for val_x, val_y in indist_val_loader:
+                        val_x = val_x.to(self.device)
+                        val_y = val_y.to(self.device)
+
+                        d_val = model.validation_step_ae(val_x, y=val_y)
+                        logger.process_iter_val(d_val)
+                    d_val = logger.summary_val(i)
+                    val_loss = d_val['loss/val_loss_']
+                    print(d_val['print_str'])
+                    best_model = val_loss < best_val_loss
+
+                    if best_model:
+                        self.save_model(model, logdir, best=best_model, i_iter=i)
+                        print(f'Iter [{i:d}] best model saved {val_loss} <= {best_val_loss}')
+                        best_val_loss = val_loss
+                    else:
+                        no_best_model_count += 1
+                        if no_best_model_count > no_best_model_tolerance:
+                            break
+
+            if i_epoch % cfg.get('save_interval_epoch', 1) == 1:
+                self.save_model(model, logdir, best=False, i_iter=None, i_epoch=i_epoch)
+                print(f'Epoch [{i_epoch:d}] model saved {cfg.save_interval_epoch}')
+
+            if no_best_model_count > no_best_model_tolerance:
+                print('terminating autoencoder training since validation loss does not decrease anymore')
+                break
+
+        '''NAE PASS'''
+        logger.has_val_loss = False
+        if cfg.get('transfer_encoder', False):
+            state_dict = model.encoder.state_dict()
+            state_dict.pop('linear.weight'); state_dict.pop('linear.bias')
+            transfer_result = model.varnet.load_state_dict(state_dict, strict=False)
+            print('varnet initialized from encoder:', transfer_result)
+        # load best autoencoder model
+        #  model.load_state_dict(torch.load(os.path.join(logdir, 'model_best.pkl'))['model_state'])
+        # print('best model loaded')
+        i = 0
+        for i_epoch in tqdm(range(n_nae_epoch)):
+            for x, _ in tqdm(indist_train_loader):
+                i += 1
+
+                x = x.cuda(self.device)
+                if cfg.get('flatten', False):
+                    x = x.view(len(x), -1)
+                # from pudb import set_trace; set_trace()
+                d_result = model.train_step(x, nae_opt, clip_grad=clip_grad)
+                logger.process_iter_train(d_result)
+
+                if i % cfg.print_interval_nae == 1:
+                    input_img = make_grid(x.detach().cpu(), nrow=10, range=(0, 1))
+                    recon_img = make_grid(model.reconstruct(x).detach().cpu(), nrow=10, range=(0, 1))
+                    logger.d_train['input_img@'] = input_img
+                    logger.d_train['recon_img@'] = recon_img
+                    logger.summary_train(i)
+ 
+                if i % cfg.val_interval == 1:
+                    '''AUC'''
+                    in_pred = self.predict(model, indist_val_loader, self.device)
+                    ood1_pred = self.predict(model, oodval_val_loader, self.device)
+                    auc_val = roc_btw_arr(ood1_pred, in_pred)
+                    ood2_pred = self.predict(model, oodtarget_val_loader, self.device)
+                    auc_target = roc_btw_arr(ood2_pred, in_pred)
+                    d_result = {'nae/auc_val_': auc_val, 'nae/auc_target_': auc_target}
+                    logger.process_iter_val(d_result)
+                    print(logger.summary_val(i)['print_str'])
+                    torch.save({'model_state': model.state_dict()}, f'{logdir}/nae_iter_{i}.pkl')
+
+            torch.save(model.state_dict(), f'{logdir}/nae_{i_epoch}.pkl')
+        torch.save(model.state_dict(), f'{logdir}/nae.pkl')
+
+        '''AUC'''
+        in_pred = self.predict(model, indist_val_loader, self.device)
+        ood1_pred = self.predict(model, oodval_val_loader, self.device)
+        auc_val = roc_btw_arr(ood1_pred, in_pred)
+        ood2_pred = self.predict(model, oodtarget_val_loader, self.device)
+        auc_target = roc_btw_arr(ood2_pred, in_pred)
+        d_result = {'nae/auc_val': auc_val, 'nae/auc_target': auc_target}
+        print(d_result)
+
+        return model, auc_val
+
+    def predict(self, m, dl, device, flatten=False):
+        """run prediction for the whole dataset"""
+        l_result = []
+        for x, _ in dl:
+            with torch.no_grad():
+                if flatten:
+                    x = x.view(len(x), -1)
+                pred = m.predict(x.cuda(device)).detach().cpu()
+            l_result.append(pred)
+        return torch.cat(l_result)
 
