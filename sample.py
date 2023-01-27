@@ -19,6 +19,7 @@ parser.add_argument('--n_sample', default=1000, type=int, help='the number of sa
 parser.add_argument('--zstep', default=None, type=int, help='the number of the latent Langevin MC steps')
 parser.add_argument('--xstep', default=None, type=int, help='the number of the visible Langevin MC steps')
 parser.add_argument('--x_shape', default=32, type=int, help='the size of a side of an image.')
+parser.add_argument('--x_channel', default=3, type=int, help='the number of channels in an image.')
 parser.add_argument('--batch_size', default=128, type=int)
 parser.add_argument('--name', default=None, type=str, help='additional identifier for the result file.')
 parser.add_argument('--replay', default=False, action='store_true', help='to use the sample replay buffer')
@@ -28,6 +29,7 @@ args = parser.parse_args()
 config_path = os.path.join(args.result_dir, args.config)
 ckpt_path = os.path.join(args.result_dir, args.ckpt)
 device = f'cuda:{args.device}'
+print(f'using {device}')
 
 # load model
 print(f'building a model from {config_path}')
@@ -36,7 +38,7 @@ model = get_model(cfg)
 model_class = cfg['model']['arch']
 
 print(f'loading a model from {ckpt_path}')
-state = torch.load(ckpt_path)
+state = torch.load(ckpt_path, map_location=device)
 if 'model_state' in state:
     state = state['model_state']
 model.load_state_dict(state)
@@ -47,16 +49,16 @@ if model_class == 'nae':
     print(f'replay {args.replay}')
     model.replay = args.replay
 
-    dummy_x = torch.rand(1, 3, args.x_shape, args.x_shape, dtype=torch.float).to(device)
+    dummy_x = torch.rand(1, args.x_channel, args.x_shape, args.x_shape, dtype=torch.float).to(device)
     model._set_x_shape(dummy_x)
     model._set_z_shape(dummy_x)
 
     if args.zstep is not None:
         model.z_step = args.zstep
-        print(f'z_step: {model.z_step}')
+    print(f'z_step: {model.z_step}')
     if args.xstep is not None:
         model.x_step = args.xstep
-        print(f'x_step: {model.x_step}')
+    print(f'x_step: {model.x_step}')
 elif model_class == 'vae':
     dummy_x = torch.rand(1, 3, args.x_shape, args.x_shape, dtype=torch.float).to(device)
     model._set_z_shape(dummy_x)

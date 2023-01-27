@@ -55,7 +55,7 @@ class MNIST_OOD(MNIST):
         else:
             data_file = self.test_file
 
-        data, targets = torch.load(os.path.join(self.processed_folder, data_file))
+        data, targets = self.data, self.targets
 
         if split == 'training':
             self.data = data[shuffle_idx][:54000]
@@ -66,14 +66,6 @@ class MNIST_OOD(MNIST):
         elif split == 'evaluation':
             self.data = data
             self.targets = targets
-
-    @property
-    def raw_folder(self):
-        return os.path.join(self.root, 'MNIST', 'raw')
-
-    @property
-    def processed_folder(self):
-        return os.path.join(self.root, 'MNIST', 'processed')
 
 
 class FashionMNIST_OOD(FashionMNIST):
@@ -101,7 +93,7 @@ class FashionMNIST_OOD(FashionMNIST):
         else:
             data_file = self.test_file
 
-        data, targets = torch.load(os.path.join(self.processed_folder, data_file))
+        data, targets = self.data, self.targets
 
         if split == 'training':
             self.data = data[shuffle_idx][:54000]
@@ -112,14 +104,6 @@ class FashionMNIST_OOD(FashionMNIST):
         elif split == 'evaluation':
             self.data = data
             self.targets = targets
-
-    @property
-    def raw_folder(self):
-        return os.path.join(self.root, 'FashionMNIST', 'raw')
-
-    @property
-    def processed_folder(self):
-        return os.path.join(self.root, 'FashionMNIST', 'processed')
 
 
 class CIFAR10_OOD(CIFAR10):
