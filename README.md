@@ -8,7 +8,7 @@ Paper: https://arxiv.org/abs/2105.05735
 5-min video: https://www.youtube.com/watch?v=ra6usGKnPGk
 
 
-![MNIST-figure](fig_mnist_recon_with_box_v2.png)
+![MNIST-figure](assets/fig_mnist_recon_with_box_v2.png)
 
 ## News
 
@@ -124,22 +124,22 @@ Use `train.py` to train NAE.
 * `--logdir` specifies a directory where results files will be written.
 * `--run` specifies an id for each run, i.e., an experiment.
 
-Training on MNIST
+**Training on MNIST**
 ```
 python train.py --config configs/mnist_ood_nae/z32.yml --logdir results/mnist_ood_nae/ --run run --device 0
 ```
 
-Training on MNIST digits 0 to 8 for the hold-out digit detection task
+**Training on MNIST digits 0 to 8 for the hold-out digit detection task**
 ```
 python train.py --config configs/mnist_ho_nae/l2_z32.yml --logdir results/mnist_ho_nae --run run --device 0
 ```
 
-Training on CIFAR-10
+**Training on CIFAR-10**
 ```
 python train.py --config configs/cifar_ood_nae/z32gn.yml --logdir results/cifar_ood_nae/ --run run --device 0
 ```
 
-Training on CelebA 64x64
+**Training on CelebA 64x64**
 ```
 python train.py --config configs/celeba64_ood_nae/z64gr_h32g8.yml --logdir results/celeba64_ood_nae/z64gr_h32g8.yml --run run --device 0
 ```
@@ -150,23 +150,35 @@ python train.py --config configs/celeba64_ood_nae/z64gr_h32g8.yml --logdir resul
 Use `sample.py` to generate sample images form NAE. Samples are saved as `.npy` file containing an `(n_sample, img_h, img_w, channels)` array.
 Note that the quality of generated images is not supposed to match that of state-of-the-art generative models. Improving the sample quality is one of the important future research direction.
 
-Sampling for CIFAR-10
+**Sampling for MNIST**
+
+```
+python sample.py pretrained/mnist_ood_nae/z32/ z32.yml nae_20.pkl --zstep 200 --x_shape 28 --batch_size 64 --n_sample 64  --x_channel 1 --device 0
+```
+
+![mnistsamples](assets/mnistsamples.png)
+
+The white square is an artifact of NAE, possibly occurring due to the distortion of the encoder and the decoder.
+
+The result is comparable to the samples from a vanilla autoencoder generated with the same procedure.
+
+![vanillamnistsamples](assets/vanilla_ae_mnistsamples.png)
+
+
+**Sampling for CIFAR-10**
 ```
 python sample.py pretrained/cifar_ood_nae/z32gn/ z32gn.yml nae_8.pkl --zstep 180 --xstep 40 --batch_size 64 --n_sample 64 --name run --device 0
 ```
 
+![cifar10samples](assets/cifar10samples.png)
 
-Sampling for CelebA 64x64
+**Sampling for CelebA 64x64**
 ```
 python sample.py pretrained/celeba64_ood_nae/z64gr_h32g8/ z64gr_h32g8.yml nae_3.pkl --zstep 180 --xstep 40 --batch_size 64 --n_sample 64 --name run --device 0 --x_shape 64
 ```
 
 
-Sample images for CIFAR-10 and CelebA 64x64
-
-![cifar10samples](cifar10samples.png)
-
-![celeba64samples](celeba64samples.png)
+![celeba64samples](assets/celeba64samples.png)
 
 
 
