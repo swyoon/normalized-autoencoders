@@ -1,0 +1,87 @@
+trainer: nae 
+logger: nae
+model:
+    arch: nae 
+    encoder: 
+        arch: conv2fc 
+        nh: 8
+        nh_mlp: 1024
+        out_activation: linear 
+    decoder:
+        arch: deconv2
+        nh: 8
+        out_activation: sigmoid 
+    nae:
+        spherical: True
+        gamma: 1 
+        sampling: on_manifold
+
+        z_step: 10
+        z_stepsize: 0.2 
+        z_noise_std: 0.05
+        z_noise_anneal: Null 
+        z_clip_langevin_grad: Null
+        x_step: 50
+        x_stepsize: 10 
+        x_noise_std: 0.05 
+        x_noise_anneal: 1 
+        x_clip_langevin_grad: 0.01
+
+        buffer_size: 10000
+        replay_ratio: 0.95
+        replay: True
+        
+        x_bound:
+            - 0
+            - 1
+        z_bound: Null
+        l2_norm_reg: Null 
+        l2_norm_reg_en: 1e-4
+        temperature: 1.
+        temperature_trainable: False 
+
+    x_dim: 1
+    z_dim: 32
+data:
+    indist_train:
+        dataset: FashionMNIST_OOD
+        path: datasets
+        shuffle: True
+        batch_size: 128
+        n_workers: 8
+        split: training
+        size: 28
+        dequant:
+          UniformDequantize: {}
+    indist_val:
+        dataset: FashionMNIST_OOD
+        path: datasets
+        batch_size: 128
+        n_workers: 8
+        split: validation
+        size: 28
+    ood_val:
+        dataset: Constant_OOD 
+        size: 28
+        channel: 1
+        path: datasets
+        split: validation
+        n_workers: 4
+        batch_size: 128
+    ood_target:
+        dataset: MNIST_OOD 
+        size: 28
+        channel: 1
+        path: datasets
+        split: validation
+        n_workers: 4
+        batch_size: 128
+training:
+    ae_epoch: 100
+    nae_epoch: 50
+    save_interval: 2000
+    val_interval: 1000 
+    print_interval: 100
+    ae_lr: 1e-4
+    nae_lr: 1e-5
+    fix_D: false 

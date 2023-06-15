@@ -12,6 +12,7 @@ Paper: https://arxiv.org/abs/2105.05735
 
 ## News
 
+* 2023-06-15 : Add config file for FashionMNIST
 * 2022-06-13 : Refactoring of NAE class.  
 
 
@@ -142,6 +143,11 @@ python train.py --config configs/cifar_ood_nae/z32gn.yml --logdir results/cifar_
 **Training on CelebA 64x64**
 ```
 python train.py --config configs/celeba64_ood_nae/z64gr_h32g8.yml --logdir results/celeba64_ood_nae/z64gr_h32g8.yml --run run --device 0
+```
+
+**Training on FashionMNIST**
+```
+python train.py --config configs/fmnist_ood_nae/z32.yml --device 0 --logdir results/fmnist_ood_nae --run run --device 0
 ```
 
 
